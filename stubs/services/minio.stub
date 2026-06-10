@@ -15,3 +15,20 @@
       test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
       retries: 3
       timeout: 5s
+
+// Throwaway container to do the bucket setup
+createbuckets:
+  image: 'minio/mc:latest'
+  depends_on:
+    - minio
+  entrypoint: >
+    /bin/sh -c "
+    sleep 3;
+    mc alias set sail http://minio:9000 sail password;
+    mc mb sail/${S3_BUCKET:-local};
+    exit 0;
+    "
+  environment:
+    - S3_BUCKET=${S3_BUCKET:-local}
+  networks:
+    - sail
